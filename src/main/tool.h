@@ -22,8 +22,7 @@ public:
         if (tool_state == true){
           tool_state_str = "ON";
         }
-        message = name + ", " + tool_state;
-        //message = tool_name;
+        message = name + ", " + tool_state_str;
         if (tool_state != old_tool_state){
             Serial.println("tool state has changed");
             clt.publish("tools/dust_collection", message);
@@ -33,7 +32,11 @@ public:
     
     void turn_off(EspMQTTClient &clt){
         tool_state = false;
-        message = name + ", " + tool_state;
+        String tool_state_str = "OFF";
+        if (tool_state == true){
+          tool_state_str = "ON";
+        }
+        message = name + ", " + tool_state_str;
         if (tool_state != old_tool_state){
             Serial.println("tool state has changed");
             clt.publish("tools/dust_collection", message);
