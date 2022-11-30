@@ -27,58 +27,36 @@ EspMQTTClient espclient(
     1883              // The MQTT port, default to 1883. this line can be omitted
     );
 
-
-// initializations for the ISR_SERVO functions
-
 #ifndef ESP8266
   #error This code is designed to run on ESP8266 platform, not Arduino nor ESP32! Please check your Tools->Board setting.
 #endif
 
-
 // Turn-off timer values, in 100 msec "ticks"
-#define   VAC_DELAY     2000 //  Test 300 ticks, 30 sec    3000    // 3000 ticks, 300 sec (5 min) delay to turn off vacuum after tool turns off
-#define   LED_BLINK       5 //  5 ticks, 0.5 sec to blink the LED
-
+#define   VAC_DELAY     30000 //  30,000 millis = 30 sec
 
 bool vacOn = false;
-int vacCounter = 0;
+unsigned int vacCounter = millis();
 const int vacCntrlPin = D2;
-int vacCntrl = 0;
 const int ledPin = D4;
-int ledState = 0;
-int ledBlinkCounter = 0;
 int tool_on_counter = 0;
 
 
-void blinkLED()
-{
-  if(ledState==LOW)
-  {
-    digitalWrite(ledPin,HIGH);
-    ledState=HIGH;
-  }
-  else
-  {
-    digitalWrite(ledPin,LOW);
-    ledState=LOW;
-  }
-}
-
-
 void onMessageReceived(const String& message) {
-    Serial.println("message received from test/mytopic: " + message);
+    Serial.println("message received from tools/dust_collection: " + message);
 
-    if (message.indexOf("ON")){
+    if (message.indexOf(", ON") != -1){
         digitalWrite(vacCntrlPin, HIGH);
+        digitalWrite(ledPin, LOW); //turns on led
         vacOn = true;
         tool_on_counter += 1;
     }
     else{
         vacOn = false;
-        tool_on_counter -= 1;
+        tool_on_counter = tool_on_counter - 1;
     }
 
     if (tool_on_counter == 0){
+        Serial.println("start coundown");
         vacCounter = millis(); // no tools on, start countdown
     }
 }
@@ -87,20 +65,18 @@ void onMessageReceived(const String& message) {
 void onConnectionEstablished()
 {
     espclient.publish("tools/dust_collection", "Dust Collector connected");
-
     espclient.subscribe("tools/dust_collection", onMessageReceived);
 }
 
 
 void setup()
 {
-  pinMode(D3, INPUT_PULLUP); // for testing Adam:
-
   Serial.begin(115200);
   while (!Serial);
 
   pinMode(vacCntrlPin, OUTPUT);
   pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, HIGH); //initialize led off
 }
 
 
@@ -110,9 +86,11 @@ void loop()
 
   if(millis() > vacCounter + VAC_DELAY){
       digitalWrite(vacCntrlPin, LOW);
+      digitalWrite(ledPin, HIGH);
   }
 
   if((millis() - vacCounter) > 1,000,000){
       digitalWrite(vacCntrlPin, LOW); // turn off every 20 minutes as fail-safe
+      digitalWrite(ledPin, HIGH);
   }
 }
