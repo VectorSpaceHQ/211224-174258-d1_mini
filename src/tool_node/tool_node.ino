@@ -127,7 +127,6 @@ void onConnectionEstablished()
 
 void setup()
 {
-  pinMode(D3, INPUT_PULLUP); // for testing Adam:
   tool.name = TOOL_NAME;
 
   Serial.begin(115200);
@@ -180,8 +179,7 @@ void loop()
   currSense = digitalRead(currSensePin);
   //Serial.print("Current Sense Input = ");
   //Serial.println(currSense);
-  //if (currSense == HIGH) // Current sense input is High, indicating current >= 1.5 A
-  if (digitalRead(D3) == LOW)   
+  if (currSense == HIGH) // Current sense input is High, indicating current >= 1.5 A
     {
       // Restart the delay counters, since we are opening the gate and turning on the vacuum
       gateCounter = 0;
