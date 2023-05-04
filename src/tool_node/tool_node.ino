@@ -48,7 +48,7 @@
 #include "tool.h"
 #include "EspMQTTClient.h"
 
-#define TOOL_NAME "TABLE SAW"
+#define TOOL_NAME "FakeTool"
 
 EspMQTTClient espclient(
     "VS-2",
