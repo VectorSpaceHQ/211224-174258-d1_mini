@@ -48,7 +48,7 @@
 #include "tool.h"
 #include "EspMQTTClient.h"
 
-#define TOOL_NAME "FakeTool"
+#define TOOL_NAME "Miter Saw"
 
 EspMQTTClient espclient(
     "VS-2",
@@ -164,8 +164,8 @@ void setup()
   }
 
   // Optional functionalities of EspMQTTClient
-  espclient.enableDebuggingMessages(); // Enable debugging messages sent to serial output
-  //espclient.enableOTA(); // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
+  //espclient.enableDebuggingMessages(); // Enable debugging messages sent to serial output
+  espclient.enableOTA(); // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
 
 } // End of setup
 

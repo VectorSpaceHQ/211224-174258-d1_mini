@@ -37,7 +37,7 @@ EspMQTTClient espclient(
 
 bool vacOn = false;
 unsigned int vacCounter = millis();
-const int vacCntrlPin = D3;
+const int vacCntrlPin = D2;
 const int ledPin = D4;
 const int switchPin = D5;
 int tool_on_counter = 0;
@@ -52,7 +52,7 @@ void onMessageReceived(const String& message) {
     if (message.indexOf(", ON") != -1){
         Serial.println("ON command received");
         
-        espclient.publish("tools/dust_collection", "** dust collector is turning ON **");
+        espclient.publish("tools/dust_collection", "** Dust collector is turning ON **");
         digitalWrite(vacCntrlPin, HIGH);
         digitalWrite(ledPin, LOW); //turns on led
         vacOn = true;
@@ -87,14 +87,14 @@ void heartbeat()
   if (millis() - lastbeat > 1000){
     if (vacOn == false){
       digitalWrite(ledPin, LOW);
-      delay(300);
+      delay(500);
       digitalWrite(ledPin, HIGH);
       lastbeat = millis();
       Serial.println("heartbeat off");
     }
     else{
       digitalWrite(ledPin, HIGH);
-      delay(300);
+      delay(500);
       digitalWrite(ledPin, LOW);
       lastbeat = millis();
       Serial.print("heartbeat on, ");
@@ -122,6 +122,8 @@ void setup()
   digitalWrite(ledPin, HIGH); //initialize led off
 
   heartbeat();
+
+  safetyBlock = false;
 }
 
 
@@ -135,8 +137,8 @@ void loop()
   if(digitalRead(switchPin) == HIGH and switchState == false){
     delay(100); // debounce
     if(digitalRead(switchPin) == HIGH and switchState == false and safetyBlock == false){
-      espclient.publish("tools/dust_collection", "manual switch, ON");
       switchState = true;
+      espclient.publish("tools/dust_collection", "manual switch, ON");
     }
   }
   else if (switchState == true and digitalRead(switchPin) == LOW){
