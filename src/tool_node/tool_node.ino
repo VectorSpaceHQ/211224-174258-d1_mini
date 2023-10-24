@@ -11,6 +11,8 @@
  *
  * Future work will add an MQTT client, that will communicate when tools are in use, and a separate unit on the central
  * vacuum and air filter to turn them on and off without needing wires.
+ * 
+ * LOLIN(WEMOS) D1 R2 & mini
  *
  * ISR Servo code Copyright (c) 2021 by Khoi Hoang - See below
  *
@@ -48,7 +50,7 @@
 #include "tool.h"
 #include "EspMQTTClient.h"
 
-#define TOOL_NAME "Miter Saw"
+#define TOOL_NAME "Table Saw 1"
 
 EspMQTTClient espclient(
     "VS-2",
@@ -75,15 +77,16 @@ EspMQTTClient espclient(
 #define MIN_MICROS       550  // Min pulswidth 0.55 msec => 0 deg position
 #define MAX_MICROS      2450  // Max pulsewidth 2.45 msec => 180 deg position
 
+
 int servoIndex  = -1;
 
 // Initializations for this application
 
 // Turn-off timer values, in 100 msec "ticks"
-#define   GATE_DELAY    100 //  Test 100 ticks, 10 sec    1200    // 1200 ticks, 120 sec (2 min) delay to close gate after tool turns off
-#define   VAC_DELAY     300 //  Test 300 ticks, 30 sec    3000    // 3000 ticks, 300 sec (5 min) delay to turn off vacuum after tool turns off
-#define   CLOSED_GATE     0 //  Closed position of gate is 0 degrees on the servo
-#define   OPEN_GATE     105 //  Open position of gate is 105 degrees on the servo
+#define   GATE_DELAY    1000 //  Test 100 ticks, 10 sec    1200    // 1200 ticks, 120 sec (2 min) delay to close gate after tool turns off
+#define   VAC_DELAY     3000 //  Test 300 ticks, 30 sec    3000    // 3000 ticks, 300 sec (5 min) delay to turn off vacuum after tool turns off
+#define   CLOSED_GATE     145 //  Closed position of gate is 0 degrees on the servo. 145 when on right side
+#define   OPEN_GATE     20 //  Open position of gate is 105 degrees on the servo. 20 when on right side
 #define   LED_BLINK       5 //  5 ticks, 0.5 sec to blink the LED
 
 bool toolOn = false;
@@ -139,14 +142,31 @@ void setup()
   Serial.println(ESP8266_ISR_SERVO_VERSION);
   delay(200);
   Serial.println("Starting to setup servo");
-  delay(200);
   servoIndex = ISR_Servo.setupServo(gateCntrlPin, MIN_MICROS, MAX_MICROS);   // Pin D1 based on schematic as of 11/25/21
-  delay(200);
+  delay(400);
   Serial.println("Returned from setup");
   if (servoIndex != -1)
+  {
     Serial.println(F("Setup Servo OK"));
+    for(int i=0; i<5; i++)
+    {
+      digitalWrite(ledPin,HIGH);
+      delay(50);
+      digitalWrite(ledPin,LOW);
+      delay(50);
+    }
+  }
   else
+  {
     Serial.println(F("Setup Servo1 failed"));
+    for(int i=0; i<5; i++)
+    {
+      digitalWrite(ledPin,HIGH);
+      delay(200);
+      digitalWrite(ledPin,LOW);
+      delay(50);
+    }
+  }
 
   // Setup Digital I/O pins
   
@@ -230,7 +250,6 @@ void loop()
             }
 
         } // End if vacuum is on
-
       } // End else, tool has been turned off
   ISR_Servo.setPosition(servoIndex, gatePosition);  // Repeat command to servo position
 
