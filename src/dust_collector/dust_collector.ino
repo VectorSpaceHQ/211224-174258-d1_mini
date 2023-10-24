@@ -32,7 +32,7 @@ EspMQTTClient espclient(
 #endif
 
 // Turn-off timer values, in 100 msec "ticks"
-#define   VAC_DELAY     30000 //  30,000 millis = 30 sec
+#define   VAC_DELAY     300000 //  300,000 millis = 5 min
 #define SAFETY_TIMER    1800000 // 1,800,000 millis = 30 min
 
 bool vacOn = false;
@@ -51,7 +51,7 @@ void onMessageReceived(const String& message) {
   delay(100); // debounce
     if (message.indexOf(", ON") != -1){
         Serial.println("ON command received");
-        
+
         espclient.publish("tools/dust_collection", "** Dust collector is turning ON **");
         digitalWrite(vacCntrlPin, HIGH);
         digitalWrite(ledPin, LOW); //turns on led
@@ -60,7 +60,7 @@ void onMessageReceived(const String& message) {
         timeOn = millis();
         Serial.println(tool_on_counter);
         vacCounter = millis() + SAFETY_TIMER;
-        
+
     }
     else if (message.indexOf(", OFF") != -1){
         Serial.println("OFF command received");
@@ -162,7 +162,7 @@ void loop()
   // Safety turn off
   if(vacOn == true and millis() - timeOn > SAFETY_TIMER){ // turn off after 20 minutes as fail-safe
       vacOn = false;
-      digitalWrite(vacCntrlPin, LOW); 
+      digitalWrite(vacCntrlPin, LOW);
       digitalWrite(ledPin, HIGH);
       espclient.publish("tools/dust_collection", "** Dust collector is turnign OFF due to safety timer **");
       Serial.println("Safety Timer reached. Shutting down dust collector.");
