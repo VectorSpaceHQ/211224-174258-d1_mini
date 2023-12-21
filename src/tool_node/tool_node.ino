@@ -264,3 +264,13 @@ void loop()
   }
 
 } // End of main loop()
+
+
+void ask_anyone_open(){
+  espclient.publish("tools/dust_collection", "anyone open?");
+}
+
+void answer_anyone_open(){
+  String msg = String(TOOL_NAME) + " is open";
+  espclient.publish("tools/dust_collection", msg);
+}
