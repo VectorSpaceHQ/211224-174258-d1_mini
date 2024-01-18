@@ -123,6 +123,9 @@ void setup()
 
   heartbeat();
 
+  // startup delay to wait for wifi
+  delay(3000);
+
   safetyBlock = false;
 }
 
