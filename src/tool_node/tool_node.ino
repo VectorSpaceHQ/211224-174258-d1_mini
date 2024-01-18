@@ -50,7 +50,7 @@
 #include "tool.h"
 #include "EspMQTTClient.h"
 
-#define TOOL_NAME "Table Saw 1"
+#define TOOL_NAME "Miter Saw"
 
 EspMQTTClient espclient(
     "VS-2",
@@ -83,8 +83,8 @@ int servoIndex  = -1;
 // Initializations for this application
 
 // Turn-off timer values, in 100 msec "ticks"
-#define   GATE_DELAY    1000 //  Test 100 ticks, 10 sec    1200    // 1200 ticks, 120 sec (2 min) delay to close gate after tool turns off
-#define   VAC_DELAY     3000 //  Test 300 ticks, 30 sec    3000    // 3000 ticks, 300 sec (5 min) delay to turn off vacuum after tool turns off
+#define   GATE_DELAY    100 //  Test 100 ticks, 10 sec    1200    // 1200 ticks, 120 sec (2 min) delay to close gate after tool turns off
+#define   VAC_DELAY     300 //  Test 300 ticks, 30 sec    3000    // 3000 ticks, 300 sec (5 min) delay to turn off vacuum after tool turns off
 #define   CLOSED_GATE     145 //  Closed position of gate is 0 degrees on the servo. 145 when on right side
 #define   OPEN_GATE     20 //  Open position of gate is 105 degrees on the servo. 20 when on right side
 #define   LED_BLINK       5 //  5 ticks, 0.5 sec to blink the LED

@@ -32,7 +32,7 @@ EspMQTTClient espclient(
 #endif
 
 // Turn-off timer values, in 100 msec "ticks"
-#define   VAC_DELAY     300000 //  300,000 millis = 5 min
+#define   VAC_DELAY     600000 //  600,000 millis = 10 min. 6 Starts per hour.
 #define SAFETY_TIMER    1800000 // 1,800,000 millis = 30 min
 
 bool vacOn = false;
