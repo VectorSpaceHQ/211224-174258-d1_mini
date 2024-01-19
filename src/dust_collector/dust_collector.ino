@@ -32,16 +32,17 @@ EspMQTTClient espclient(
 #endif
 
 // Turn-off timer values, in 100 msec "ticks"
-#define   VAC_DELAY     600000 //  600,000 millis = 10 min. 6 Starts per hour.
-#define SAFETY_TIMER    1800000 // 1,800,000 millis = 30 min
+#define   VAC_DELAY      600000 //  600,000 millis = 10 min. 6 Starts per hour.
+#define   SAFETY_TIMER  1800000 // 1,800,000 millis = 30 min
 
 bool vacOn = false;
-unsigned int vacCounter = millis();
+unsigned long vacCounter = millis();
 const int vacCntrlPin = D2;
 const int ledPin = D4;
 const int switchPin = D5;
 int tool_on_counter = 0;
-long lastbeat = millis();
+unsigned long lastbeat = millis();
+unsigned long last_tool_on_time = 0;
 bool safetyBlock = true;
 long timeOn;
 bool switchState = false;
@@ -68,12 +69,24 @@ void onMessageReceived(const String& message) {
         tool_on_counter = tool_on_counter - 1;
         tool_on_counter = max(0, tool_on_counter);
         Serial.println(tool_on_counter);
+	espclient.publish("tools/dust_collection", "Dust Collector, off command received");
     }
 
     if (tool_on_counter == 0){
         Serial.println("start coundown");
         espclient.publish("tools/dust_collection", "Dust Collector, start countdown");
         vacCounter = millis(); // no tools on, start countdown
+    }
+
+    if (message.indexOf("Status Report") != -1){
+      if (vacOn == true){
+	String msg = "Dust Collector, Running for: " + String(timeOn/1000/60) + " minutes";
+	espclient.publish("tools/dust_collection", "Dust Collector, Current state: ON");
+	espclient.publish("tools/dust_collection", msg);
+      }
+      else{
+	espclient.publish("tools/dust_collection", "Dust Collector, Current state: OFF");
+      }
     }
 }
 
@@ -104,6 +117,14 @@ void heartbeat()
       Serial.println(tool_on_counter);
     }
   }
+}
+
+void safety_check(){
+  // Check if dust collector is running AND
+  // last tool use was more than 20 minutes ago
+  // Shut off dust collector
+
+  
 }
 
 
@@ -143,7 +164,7 @@ void loop()
 
 
   // Safety turn off
-  if(vacOn == true and millis() - timeOn > SAFETY_TIMER){ // turn off after 20 minutes as fail-safe
+  if(vacOn == true and (millis() - timeOn) > SAFETY_TIMER){ // turn off after 20 minutes as fail-safe
       vacOn = false;
       digitalWrite(vacCntrlPin, LOW);
       digitalWrite(ledPin, HIGH);
