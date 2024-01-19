@@ -48,11 +48,12 @@ bool switchState = false;
 
 
 void onMessageReceived(const String& message) {
+
   delay(100); // debounce
     if (message.indexOf(", ON") != -1){
         Serial.println("ON command received");
 
-        espclient.publish("tools/dust_collection", "** Dust collector is turning ON **");
+        espclient.publish("tools/dust_collection", "Dust Collector, ON");
         digitalWrite(vacCntrlPin, HIGH);
         digitalWrite(ledPin, LOW); //turns on led
         vacOn = true;
@@ -71,6 +72,7 @@ void onMessageReceived(const String& message) {
 
     if (tool_on_counter == 0){
         Serial.println("start coundown");
+        espclient.publish("tools/dust_collection", "Dust Collector, start countdown");
         vacCounter = millis(); // no tools on, start countdown
     }
 }
@@ -78,7 +80,7 @@ void onMessageReceived(const String& message) {
 
 void onConnectionEstablished()
 {
-    espclient.publish("tools/dust_collection", "Dust Collector connected");
+    espclient.publish("tools/dust_collection", "Dust Collector, Connected");
     espclient.subscribe("tools/dust_collection", onMessageReceived);
 }
 
@@ -118,13 +120,9 @@ void setup()
 
   pinMode(vacCntrlPin, OUTPUT);
   pinMode(ledPin, OUTPUT);
-  pinMode(switchPin, INPUT_PULLUP);
   digitalWrite(ledPin, HIGH); //initialize led off
 
   heartbeat();
-
-  // startup delay to wait for wifi
-  delay(3000);
 
   safetyBlock = false;
 }
@@ -134,31 +132,13 @@ void loop()
 {
   espclient.loop();
   heartbeat();
-
-
-  // ************** manual operation ****************
-  if(digitalRead(switchPin) == HIGH and switchState == false){
-    delay(100); // debounce
-    if(digitalRead(switchPin) == HIGH and switchState == false and safetyBlock == false){
-      switchState = true;
-      espclient.publish("tools/dust_collection", "manual switch, ON");
-    }
-  }
-  else if (switchState == true and digitalRead(switchPin) == LOW){
-    delay(100); // debounce
-    if(digitalRead(switchPin) == LOW){
-      safetyBlock = false;
-      switchState = false;
-      espclient.publish("tools/dust_collection", "manual switch, OFF");
-    }
-  }
-  //  ***********************************
+  
 
   if(vacOn == true and millis() > (vacCounter + VAC_DELAY)){ // turn off after delay
       vacOn = false;
       digitalWrite(vacCntrlPin, LOW);
       digitalWrite(ledPin, HIGH);
-      espclient.publish("tools/dust_collection", "** Dust collector is turning OFF **");
+      espclient.publish("tools/dust_collection", "Dust Collector, OFF");
   }
 
 
