@@ -48,9 +48,37 @@ long timeOn;
 bool switchState = false;
 
 
+void onStatusMessageReceived(const String& message) {
+  if (message.indexOf("Dust Collector") != -1){
+    Serial.println("ignore own messages");
+    return;
+  }
+
+  if (message.indexOf("REPORT STATUS") != -1){
+      String msg;
+      if (vacOn == true){
+        msg = "Dust Collector, Running for: " + String((millis()-timeOn)/1000/60) + " minutes";
+        espclient.publish("tools/dust_collection/status", "Dust Collector, Current state: ON");
+        espclient.publish("tools/dust_collection/status", msg);
+      }
+      else{
+        espclient.publish("tools/dust_collection/status", "Dust Collector, Current state: OFF");
+      }
+      msg = "Dust Collector, Tool on counter: " + String(tool_on_counter);
+      espclient.publish("tools/dust_collection/status", msg);
+      return;
+    }
+    delay(1000); // debounce
+}
+
+    
 void onMessageReceived(const String& message) {
 
-  delay(100); // debounce
+  if (message.indexOf("Dust Collector") != -1){
+    Serial.println("ignore own messages");
+    return;
+  }
+    
     if (message.indexOf(", ON") != -1){
         Serial.println("ON command received");
 
@@ -69,7 +97,7 @@ void onMessageReceived(const String& message) {
         tool_on_counter = tool_on_counter - 1;
         tool_on_counter = max(0, tool_on_counter);
         Serial.println(tool_on_counter);
-	espclient.publish("tools/dust_collection", "Dust Collector, off command received");
+	      espclient.publish("tools/dust_collection", "Dust Collector, off command received");
     }
 
     if (tool_on_counter == 0){
@@ -77,24 +105,15 @@ void onMessageReceived(const String& message) {
         espclient.publish("tools/dust_collection", "Dust Collector, start countdown");
         vacCounter = millis(); // no tools on, start countdown
     }
-
-    if (message.indexOf("Status Report") != -1){
-      if (vacOn == true){
-	String msg = "Dust Collector, Running for: " + String(timeOn/1000/60) + " minutes";
-	espclient.publish("tools/dust_collection", "Dust Collector, Current state: ON");
-	espclient.publish("tools/dust_collection", msg);
-      }
-      else{
-	espclient.publish("tools/dust_collection", "Dust Collector, Current state: OFF");
-      }
-    }
+    delay(1000); // debounce
 }
 
 
 void onConnectionEstablished()
 {
-    espclient.publish("tools/dust_collection", "Dust Collector, Connected");
     espclient.subscribe("tools/dust_collection", onMessageReceived);
+    espclient.publish("tools/dust_collection", "Dust Collector, Connected");
+    espclient.subscribe("tools/dust_collection/status", onStatusMessageReceived);
 }
 
 void heartbeat()
@@ -146,6 +165,8 @@ void setup()
   heartbeat();
 
   safetyBlock = false;
+
+  delay(3000); // give wifi some time
 }
 
 
@@ -155,7 +176,9 @@ void loop()
   heartbeat();
   
 
-  if(vacOn == true and millis() > (vacCounter + VAC_DELAY)){ // turn off after delay
+  // IF vac is on, all tools are off, at least 10 minutes passed
+  // turn off
+  if(vacOn == true and millis() > vacCounter and (millis() - timeOn) > VAC_DELAY){ 
       vacOn = false;
       digitalWrite(vacCntrlPin, LOW);
       digitalWrite(ledPin, HIGH);

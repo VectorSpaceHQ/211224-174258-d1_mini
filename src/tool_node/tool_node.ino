@@ -50,7 +50,7 @@
 #include "tool.h"
 #include "EspMQTTClient.h"
 
-#define TOOL_NAME "Miter Saw"
+#define TOOL_NAME "Green Bandsaw"
 
 EspMQTTClient espclient(
     "VS-2",
@@ -119,12 +119,30 @@ void blinkLED()
     ledState=LOW;
   }
 }
- 
+
+
+void onStatusMessageReceived(const String& message) {
+  if (message.indexOf("REPORT STATUS") != -1){
+      String msg;
+      if (tool.tool_state == true){
+        msg = tool.name + ", Current state: ON"; 
+        espclient.publish("tools/dust_collection/status", msg);
+      }
+      else{
+        msg = tool.name + ", Current state: OFF"; 
+        espclient.publish("tools/dust_collection/status", msg);
+      }
+      return;
+    }
+    delay(1000); // debounce
+}
+    
     
 void onConnectionEstablished()
 {
     String msg = String(TOOL_NAME) + " Connected";
     espclient.publish("tools/dust_collection", msg);
+    espclient.subscribe("tools/dust_collection/status", onStatusMessageReceived);
 }
 
 
@@ -186,6 +204,8 @@ void setup()
   // Optional functionalities of EspMQTTClient
   //espclient.enableDebuggingMessages(); // Enable debugging messages sent to serial output
   espclient.enableOTA(); // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
+
+  delay(2000); // time for wifi
 
 } // End of setup
 
